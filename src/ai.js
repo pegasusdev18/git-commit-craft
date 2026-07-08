@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { ensureApiKey } from './config.js';
 
-const GEMINI_MODEL_NAME = 'gemini-1.5-flash';
+const GEMINI_MODEL_NAME = 'gemini-3.5-flash';
 
 const COMMIT_SYSTEM_INSTRUCTION = `
 You are a Senior Software Engineer generating Conventional Commit messages strictly following the Conventional Commits v1.0.0 specification.
@@ -39,20 +39,30 @@ function stripCodeFences(text) {
   return match ? match[1].trim() : trimmed;
 }
 
-function createGenerativeModel(apiKey, systemInstruction) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME, systemInstruction });
+async function generateWithGemini(apiKey, systemInstruction, userPrompt) {
+  const ai = new GoogleGenAI({ apiKey });
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    contents: userPrompt,
+    config: {
+      systemInstruction,
+      thinkingConfig: { thinkingBudget: 0 }
+    }
+  });
+
+  return response.text;
 }
 
 export async function generateCommitMessage(diffContent) {
   const apiKey = await ensureApiKey();
-  const model = createGenerativeModel(apiKey, COMMIT_SYSTEM_INSTRUCTION);
 
   try {
-    const result = await model.generateContent(
+    const text = await generateWithGemini(
+      apiKey,
+      COMMIT_SYSTEM_INSTRUCTION,
       `Generate a Conventional Commit message for the following git diff:\n\n${diffContent}`
     );
-    const text = result.response.text();
     return stripCodeFences(text);
   } catch (error) {
     throw new Error(`Failed to generate commit message: ${error.message}`);
@@ -78,12 +88,10 @@ Generate the complete README.md content now.`;
 
 export async function generateReadmeContent(projectMetadata) {
   const apiKey = await ensureApiKey();
-  const model = createGenerativeModel(apiKey, README_SYSTEM_INSTRUCTION);
   const prompt = buildReadmePrompt(projectMetadata);
 
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const text = await generateWithGemini(apiKey, README_SYSTEM_INSTRUCTION, prompt);
     return stripCodeFences(text);
   } catch (error) {
     throw new Error(`Failed to generate README content: ${error.message}`);
