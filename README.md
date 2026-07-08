@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-blue.svg)](https://nodejs.org)
 [![Engine](https://img.shields.io/badge/AI-Gemini%203.5%20Flash-orange.svg)](https://aistudio.google.com)
-[![Version](https://img.shields.io/badge/version-1.0.0-informational.svg)]()
+[![Version](https://img.shields.io/badge/version-1.1.0-informational.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Cross--Platform-lightgrey.svg)]()
 
 *Clean commit histories and polished documentation, without the manual overhead.*
@@ -28,14 +28,15 @@
 6. [Configuration](#-configuration)
 7. [Usage & Commands](#-usage--commands)
 8. [How It Works](#-how-it-works)
-9. [Contributing](#-contributing)
-10. [License](#-license)
+9. [Security Notice](#-security-notice)
+10. [Contributing](#-contributing)
+11. [License](#-license)
 
 ---
 
 ## 🧠 Overview
 
-`git-commit-craft` is a production-ready CLI tool built on **Node.js ESM** that uses **Google's Gemini 3.5 Flash** model to automate two of the most tedious parts of software development:
+`git-commit-craft` is a production-ready CLI tool built on **Node.js ESM** that uses **Google's Gemini 3.5 Flash** model via the official **`@google/genai`** SDK to automate two of the most tedious parts of software development:
 
 - ✅ Writing structured, standards-compliant **Conventional Commit** messages from your `git diff`
 - ✅ Generating comprehensive, professional **README.md** files from your project's structure and metadata
@@ -51,9 +52,9 @@ No more staring at a blank commit prompt or a blank README file.
 | 🤖 **AI-Generated Commits** | Analyzes staged (or unstaged) `git diff` output and produces a fully compliant Conventional Commit message |
 | 🔄 **Interactive Commit Workflow** | Accept, edit, regenerate, or cancel the AI-suggested commit directly from the terminal |
 | 📄 **Smart README Generation** | Scans your directory tree, detected language, and `package.json` to draft a complete README |
+| ⚡ **Powered by Gemini 3.5 Flash** | Frontier-level intelligence with sub-second response times, running with thinking disabled for maximum speed |
 | 🔐 **Secure Config Management** | Caches your Gemini API key locally at `~/.git-commit-craft/config.json`, or reads it from `GEMINI_API_KEY` |
 | 🎨 **Polished Terminal UX** | Custom-rendered boxes, spinners, and color-coded success/warning/error indicators |
-| 🧩 **Zero Native Dependencies** | Built entirely on lightweight, well-maintained npm packages |
 
 ---
 
@@ -62,7 +63,7 @@ No more staring at a blank commit prompt or a blank README file.
 | Category | Technology |
 |---|---|
 | Runtime | Node.js `>=18.0.0` (ESM) |
-| AI Engine | [`@google/generative-ai`](https://www.npmjs.com/package/@google/generative-ai) — Gemini 3.5 Flash |
+| AI Engine | [`@google/genai`](https://www.npmjs.com/package/@google/genai) — Gemini 3.5 Flash |
 | CLI Framework | [`commander`](https://www.npmjs.com/package/commander) |
 | Interactive Prompts | [`inquirer`](https://www.npmjs.com/package/inquirer) |
 | Terminal Spinners | [`ora`](https://www.npmjs.com/package/ora) |
@@ -88,7 +89,7 @@ git-commit-craft/
 |---|---|
 | `src/cli.js` | CLI entry point — defines `craft-commit` and `craft-readme` commands |
 | `src/config.js` | Secure API key storage and retrieval (env var or local config file) |
-| `src/ai.js` | Gemini prompt engineering and generation pipeline |
+| `src/ai.js` | Gemini 3.5 Flash prompt engineering and generation pipeline via `@google/genai` |
 | `src/git.js` | Native Git operations — diffing and committing |
 | `src/scanner.js` | Project directory analysis, language detection, `package.json` parsing |
 | `src/ui.js` | Terminal rendering — boxes, spinners, and status messages |
@@ -206,18 +207,28 @@ If a `README.md` already exists in the current directory, you'll be prompted bef
 ### Commit Generation Pipeline
 
 1. Reads `git diff --cached` (falls back to `git diff` if nothing is staged).
-2. Sends the diff to Gemini 3.5 Flash with a strict system prompt enforcing the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/) specification.
-3. Strips any accidental code fences from the model's response.
-4. Presents the result in an interactive review loop — accept, edit, regenerate, or cancel.
-5. On confirmation, runs `git commit -m "<message>"` natively.
+2. Sends the diff to **Gemini 3.5 Flash** with a strict system prompt enforcing the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/) specification.
+3. Runs with `thinkingConfig: { thinkingBudget: 0 }` to disable extended reasoning and maximize response speed.
+4. Strips any accidental code fences from the model's response.
+5. Presents the result in an interactive review loop — accept, edit, regenerate, or cancel.
+6. On confirmation, runs `git commit -m "<message>"` natively.
 
 ### README Generation Pipeline
 
 1. Recursively scans the project directory (up to a bounded depth, skipping `node_modules`, `.git`, `dist`, etc.).
 2. Detects the dominant programming language by counting file extensions.
 3. Parses `package.json`, if present, for name, dependencies, and scripts.
-4. Sends this metadata to Gemini with a system prompt tailored for professional README generation.
+4. Sends this metadata to **Gemini 3.5 Flash** with a system prompt tailored for professional README generation.
 5. Writes the raw Markdown response directly to `README.md`.
+
+---
+
+## 🔐 Security Notice
+
+Starting **June 19, 2026**, Google requires all Gemini API keys to be **restricted** to `generativelanguage.googleapis.com`. Unrestricted keys will be rejected.
+
+- Keys generated directly from [Google AI Studio](https://aistudio.google.com/app/apikey) are **restricted by default** — no extra action needed.
+- If your key was generated from a Google Cloud project, restrict it manually under **API restrictions** in [Google Cloud Credentials](https://console.cloud.google.com/apis/credentials).
 
 ---
 
