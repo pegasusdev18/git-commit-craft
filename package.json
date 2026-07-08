@@ -1,6 +1,6 @@
 {
   "name": "git-commit-craft",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI powered Conventional Commit message and README.md generator using Gemini",
   "type": "module",
   "main": "src/cli.js",
@@ -25,7 +25,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "@google/genai": "^1.0.0",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "inquirer": "^9.3.6",
